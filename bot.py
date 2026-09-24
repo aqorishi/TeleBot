@@ -38,7 +38,7 @@ async def main():
     try:
         await asyncio.gather(
             dp.start_polling(bot),
-            start_analyzer_loop(client),
+            # start_analyzer_loop(client),
             startMonitoring(session, API_KEY, API_SECRET, exchangeURL),
         )
     finally:
