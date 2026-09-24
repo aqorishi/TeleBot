@@ -5,6 +5,7 @@ from sources.config import CAPTION_HEADER, FOOTER_LINK, line, openai_api_key
 from sources.config import PERSIANDIGITS, MONTHSMAP, DAYSMAP
 from openai import OpenAI
 from datetime import datetime
+from pathlib import Path
 
 ai_client = OpenAI(api_key=openai_api_key)
 
@@ -92,21 +93,21 @@ async def signalReport(signal: dict):
 
     # Headers and Pair
     parts.append("🚀 *PREMIUM SIGNAL ALERT* 🚀")
-    # parts.append(f"📍 Source: *{signal.get('source', 'Unknown')}*")
     parts.append("")
     parts.append(f"📍 Pair: `{signal.get('symbol', '-')}`")
 
     # Side and Image
     side_icon = ""
-    # image_path = "/home/botuser/bot/sources/images/neutral.jpg"
     image_path = ""
     if "side" in signal:
         if signal["side"] == "Buy":
             side_icon = "📈"
-            image_path = "/opt/tradebot/sources/images/buy.jpg"
+            # image_path = "/opt/tradebot/sources/images/buy.jpg"
+            image_path = str(Path(__file__).parent.parent / "sources/images/buy.jpg")
         elif signal["side"] == "Sell":
             side_icon = "📉"
-            image_path = "/opt/tradebot/sources/images/sell.jpg"
+            # image_path = "/opt/tradebot/sources/images/sell.jpg"
+            image_path = str(Path(__file__).parent.parent / "sources/images/sell.jpg")
         parts.append(f"{side_icon} Side: *{signal['side']}*")
 
     # Leverage

@@ -63,7 +63,7 @@ WATCHER_GURU = -1001556054753
 WOLFX = -1001394941879
 
 
-ANALYZER_REPORTER = PERSIANFINANCIALWATCHER
+ANALYZER_REPORTER = PFW_Premium
 PFW_REPORTER = ADMIN
 
 # Source channels to monitor, can be specified by their numeric ID or username with @
