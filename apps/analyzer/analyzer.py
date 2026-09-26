@@ -12,8 +12,8 @@ from apscheduler.triggers.cron import CronTrigger
 from utils.broadcaster import send_everywhere
 
 
-INTERVAL_HOURS = 4
-PRE_MINUTES = 3
+INTERVAL_HOURS = 1 #4
+PRE_MINUTES = 15 #3
 
 reportChannel = ANALYZER_REPORTER  # Channel ID for reports
 eor = "\n\u200b\n"  # End of report marker
@@ -30,13 +30,41 @@ INDICATOR_IMAGES = {
 
 
 # === Load Trading Pairs === #
-async def load_trading_pairs(filename="./sources/pairs/pairs.json"):
+# async def load_trading_pairs(filename="./sources/pairs/pairs.json"):
+#     try:
+#         with open(filename, "r") as file:
+#             data = json.load(file)
+#             return data.get("pairs", [])
+#     except Exception as e:
+#         await adminReport(f"(Analyzer-32): Error loading trading pairs: {e}")
+#         return []
+
+
+# === Load Active Binance USDT Trading Pairs ===
+async def load_trading_pairs():
     try:
-        with open(filename, "r") as file:
-            data = json.load(file)
-            return data.get("pairs", [])
+        markets = exchange.load_markets()
+
+        pairs = [
+            symbol
+            for symbol, market in markets.items()
+            if market.get("active") is True
+            and market.get("spot") is True
+            and market.get("quote") == "USDT"
+        ]
+
+        pairs.sort()
+
+        await adminReport(
+            f"📊 Loaded {len(pairs)} active Binance USDT spot pairs."
+        )
+
+        return pairs
+
     except Exception as e:
-        await adminReport(f"(Analyzer-32): Error loading trading pairs: {e}")
+        await adminReport(
+            f"(Analyzer-32): Error loading Binance trading pairs: {e}"
+        )
         return []
 
 
@@ -125,7 +153,6 @@ def translate_numbers_to_persian(s: str) -> str:
 
 async def send_telegram_message(client, message, image_path=None):
     HEADER_BASE = "✅ ناظر مالی پارسی"
-    # LINE = "────────────"
     FOOTER = f"\n\n{FOOTER_LINK}"
     MAX_CAPTION = 1024
 
@@ -154,7 +181,7 @@ async def send_telegram_message(client, message, image_path=None):
                 parse_mode="html",
             )
 
-            await baleSendPost(caption, [image_path])
+            # await baleSendPost(caption, [image_path])
 
     except Exception as e:
         await adminReport(f"(Analyzer-140):❌ Error sending message: {e}")
@@ -232,8 +259,8 @@ def detect_divergence(pair, df):
     message = ""
     found_divergence = False
 
-    # three_days_ago = datetime.now() - timedelta(days=2)
-    three_days_ago = datetime.now(ZoneInfo("Asia/Tehran")) - timedelta(days=2)
+    three_days_ago = datetime.now() - timedelta(days=2)
+    # three_days_ago = datetime.now(ZoneInfo("Asia/Tehran")) - timedelta(days=2)
 
 
     last_two_lows = pivots[pivots["pivot_low"].notna()].tail(2)
@@ -279,9 +306,9 @@ async def prepare_analysis_reports():
     rsi_reports = ""
     macd_reports = ""
     bollinger_reports = ""
-
+    
     TRADING_PAIRS = await load_trading_pairs()
-
+    
     for pair in TRADING_PAIRS:
         df_4h = await analyzer_fetch_ohlcv(pair=pair, timeframe="4h", limit=200)
         df_1d = await analyzer_fetch_ohlcv(pair=pair, timeframe="1d", limit=200)
@@ -333,20 +360,37 @@ async def start_analyzer_loop(client):
     while True:
         now = datetime.now(tehran_tz)
 
-        # --- compute next_run robustly ---
-        # round down to hour (00 minutes) as base
-        base = now.replace(minute=0, second=0, microsecond=0)
-        # hours to add until next multiple of INTERVAL_HOURS
-        hours_to_add = INTERVAL_HOURS - (now.hour % INTERVAL_HOURS)
-        if hours_to_add == 0:
-            hours_to_add = INTERVAL_HOURS
-        next_run = base + timedelta(hours=hours_to_add)
+        #_+_+_+_+_+_+_+_+
+        # # --- compute next_run robustly ---
+        # # round down to hour (00 minutes) as base
+        # base = now.replace(minute=0, second=0, microsecond=0)
+        # # hours to add until next multiple of INTERVAL_HOURS
+        # hours_to_add = INTERVAL_HOURS - (now.hour % INTERVAL_HOURS)
+        # if hours_to_add == 0:
+        #     hours_to_add = INTERVAL_HOURS
+        # next_run = base + timedelta(hours=hours_to_add)
 
-        # Ensure next_run is strictly in the future (covers edge-cases / DST)
-        while next_run <= now:
-            next_run += timedelta(hours=INTERVAL_HOURS)
+        # # Ensure next_run is strictly in the future (covers edge-cases / DST)
+        # while next_run <= now:
+        #     next_run += timedelta(hours=INTERVAL_HOURS)
+
+        # prepare_time = next_run - timedelta(minutes=PRE_MINUTES)
+
+        # --- Schedule next run every day at 08:00 Tehran time ---
+        next_run = now.replace(
+            hour=8,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+        # If today's 08:00 has already passed, schedule for tomorrow
+        if next_run <= now:
+            next_run += timedelta(days=1)
 
         prepare_time = next_run - timedelta(minutes=PRE_MINUTES)
+
+
 
         # --- wait until prepare time (if still in future) ---
         wait_prepare = (prepare_time - now).total_seconds()

@@ -30,8 +30,10 @@ baleChatID = os.getenv("BALE_CHAT_ID")
 
 # Session paths
 SESSION_DIR = os.getenv("SESSION_DIR", "bot/sessions")
-BOT_SESSION = os.path.join(SESSION_DIR, "bot")
-ANALYZER_SESSION = os.path.join(SESSION_DIR, "analyzer")
+BOT_SESSION = os.path.join(SESSION_DIR, "bot_dev")
+ANALYZER_SESSION = os.path.join(SESSION_DIR, "analyzer_dev")
+# BOT_SESSION = os.path.join(SESSION_DIR, "bot")
+# ANALYZER_SESSION = os.path.join(SESSION_DIR, "analyzer")
 
 # Trading Parameters
 LEVERAGE = int(os.getenv("LEVERAGE", 5))  # Default leverage if not set in .env

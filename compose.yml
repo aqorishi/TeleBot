@@ -1,10 +1,12 @@
 services:
   bot:
+    image: telebot
+    
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: telebot-dev
+    container_name: telebot
 
     restart: unless-stopped
 

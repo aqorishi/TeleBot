@@ -56,7 +56,7 @@ def setup_channel_monitor(client):
             return
 
         # 🔒 Custom logic for Signal channels, Process and skip forwarding [ALWAYS_WIN, AMAN, BINANCEKILLERS_VIP, FED_RUSSIAN_VIP, WOLFX, PFW_Premium]
-        if chat_id in [BINANCEKILLERS_VIP, PFW_Premium]:
+        if chat_id in [BINANCEKILLERS_VIP]:
             handler = processor.get("handler")
             if not handler:
                 await adminReport(
@@ -82,7 +82,7 @@ def setup_channel_monitor(client):
 
                             await baleSendPost(caption, [image_path])
                     else:
-                        await adminReport(f"Channel Monitor : {ln()}\n⚠️ Arrived message from {handler} is not a signal.")
+                        await adminReport(f"Channel Monitor : {ln()}\n⚠️ Arrived message from BINANCEKILLERS VIP Channel is not a signal.")
 
             except Exception as e:
                 await adminReport(
